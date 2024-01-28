@@ -13,11 +13,11 @@ services:
       - postgres-db:/var/lib/postgresql/data
     networks:
       - fiap-lanchonete-network
-        
+
   fiap-lanches-client-api:
     image: dalexandrias/fiap-lanches-client-app:latest
     ports:
-      - "8080:8080"
+      - "8085:8085"
     volumes:
       - fiap-lancher:/var/lib/fiaplancher/data
     depends_on:
