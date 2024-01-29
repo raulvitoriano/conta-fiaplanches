@@ -1,4 +1,4 @@
-\connect fiap-lanches-product;
+\connect fiap-lanches-client;
 
 CREATE TABLE fiap-lanches-client.cliente(
 	id bigint(50) PRIMARY KEY NOT NULL,

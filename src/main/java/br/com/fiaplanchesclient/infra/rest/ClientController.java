@@ -6,6 +6,7 @@ import br.com.fiaplanchesclient.application.usecases.CreateClientUseCase;
 import br.com.fiaplanchesclient.application.usecases.DeleteClientUseCase;
 import br.com.fiaplanchesclient.application.usecases.FindClientUseCase;
 import br.com.fiaplanchesclient.application.usecases.UpdateClientUseCase;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,6 @@ import org.hibernate.validator.constraints.br.CPF;
 import org.springframework.boot.actuate.endpoint.annotation.DeleteOperation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
