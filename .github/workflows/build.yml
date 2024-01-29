@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     services:
-        postgres:
+        bddfun-database:
           image: postgres
           env:
             POSTGRES_USER: admin
