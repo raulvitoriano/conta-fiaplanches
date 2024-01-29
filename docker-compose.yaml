@@ -3,23 +3,20 @@ version: '3.8'
 services:
   postgres-db:
     image: postgres
+    command: >
+      -c work_mem=256MB
+      -c maintenance_work_mem=256MB
+      -c max_wal_size=1GB
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: fiap-lanches-client
+      POSTGRES_DB: fiap-lanches-client      
     ports:
       - "5433:5432"
     volumes:
       - postgres-db:/var/lib/postgresql/data
     networks:
       - fiap-lanchonete-network
-    resources:
-    limits:
-      cpu: "1"
-      memory: 2Gi
-    requests:
-      cpu: "1"
-      memory: 2Gi  
 
   fiap-lanches-client-api:
     image: dalexandrias/fiap-lanches-client-app:latest
