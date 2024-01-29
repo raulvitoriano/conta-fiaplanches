@@ -18,6 +18,8 @@
 <!--        <junit.version>5.9.3</junit.version>-->
         <testcontainers.version>1.19.0</testcontainers.version>
         <aspectj.version>1.9.19</aspectj.version>
+        <sonar.organization>raulvitoriano</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencyManagement>
