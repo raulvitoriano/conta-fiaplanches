@@ -2,33 +2,30 @@ package br.com.fiaplanchesclient.bdd;
 
 import br.com.fiaplanchesclient.application.dtos.ClientRequestDto;
 import br.com.fiaplanchesclient.infra.dto.ClientDto;
+import br.com.fiaplanchesclient.infra.repository.PostGresClienteRepository;
+import br.com.fiaplanchesclient.infra.repository.entity.ClientEntity;
+import io.cucumber.java.Before;
 import io.cucumber.java.pt.Dado;
+import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Entao;
 import io.cucumber.java.pt.Quando;
-import io.cucumber.java.pt.E;
 import io.restassured.RestAssured;
-import io.restassured.http.Method;
 import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.kafka.clients.ClientRequest;
 import org.hamcrest.core.Is;
-import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
-import java.io.IOException;
-import java.lang.management.MemoryType;
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class StepDefinition {
+
+    @Autowired
+    private PostGresClienteRepository clienteRepository;
 
     private Response response;
 
@@ -38,10 +35,38 @@ public class StepDefinition {
 
     private final String END_API_CLIENTE = "http://localhost:8085/v1/client";
 
-    @Dado("o cliente de CPF {word} e nome {word}")
-    public void oClienteDeCPFENomeDaniel(String cpf, String name) {
+    @Before
+    public void setUp() {
+        RestAssured.baseURI = "http://localhost:" + 8085;
+        clienteRepository.deleteAll();
+
+        System.out.println("Including Data.....");
+
+        ClientEntity c1 = new ClientEntity( new ClientDto(1L,
+                "38037984850",
+                "Daniel Tavares"));
+        ClientEntity c2 = new ClientEntity( new ClientDto(2L,
+                "49174699881",
+                "Nicole Tavares"));
+        ClientEntity c3 = new ClientEntity( new ClientDto(3L,
+                "10640145850",
+                "Cristian Macedo"));
+        ClientEntity c4 = new ClientEntity( new ClientDto(4L,
+                "16494823882",
+                "Juan Silva"));
+
+        clienteRepository.saveAll(List.of(c1, c2, c3, c4));
+
+        System.out.println("data Included.....");
+
+        clientDto = new ClientRequestDto("", "");
+    }
+
+    @Dado("o cliente de CPF {word} e nome {string}")
+    public void oClienteDeCPFENome(String cpf, String name) {
         clientDto = new ClientRequestDto(cpf, name);
     }
+
     @Quando("for realizada a chamada no endpoint de criação de cliente")
     public void for_realizada_a_chamada_no_endpoint_de_criação_de_cliente() {
         response = given()
@@ -50,17 +75,9 @@ public class StepDefinition {
                 .when()
                 .post(END_API_CLIENTE + "/create");
 
-    }
-
-    @Quando("for realizada a chamada no endpoint de delecao de cliente")
-    public void for_realizada_a_chamada_no_endpoint_de_delecao_de_cliente() {
-
-        response = given()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .when()
-                .delete(END_API_CLIENTE + "/delete/" + clientDto.cpf());
-
-        response.then().assertThat().statusCode(HttpStatus.OK.value());
+        response.then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body(matchesJsonSchemaInClasspath("schemas/ClientSchema.json"));
 
     }
 
@@ -70,6 +87,10 @@ public class StepDefinition {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when()
                 .get(END_API_CLIENTE + "/find/" + clientDto.cpf());
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body(matchesJsonSchemaInClasspath("schemas/ClientSchema.json"));
     }
 
     @Quando("for realizada a chamada no endpoint de atualizacao de cliente")
@@ -81,30 +102,41 @@ public class StepDefinition {
                 .body(clientDto)
                 .when()
                 .put(END_API_CLIENTE + "/update");
-    }
-    @Entao("o cliente deve ser criado com sucesso na base")
-    public void o_cliente_deve_ser_criado_com_sucesso_na_base() {
-            response.then()
-                    .statusCode(HttpStatus.CREATED.value())
-                    .body(matchesJsonSchemaInClasspath("schemas/ClientSchema.json"));
 
-    }
-
-    @Entao("o cliente deve ser localizado com sucesso na base")
-    public void oClienteDeveSerLocalizadoComSucessoNaBase() {
-        response.then()
-                .statusCode(HttpStatus.OK.value())
-                .body(matchesJsonSchemaInClasspath("schemas/ClientSchema.json"));
-
-    }
-
-    @Entao("o cliente deve ser atualizado com sucesso na base")
-    public void oClienteDeveSerAtualizadoComSucessoNaBase() {
         response.then()
                 .statusCode(HttpStatus.OK.value())
                 .body(matchesJsonSchemaInClasspath("schemas/ClientSchema.json"));
 
         response.then().assertThat().body("nome", Is.is(nomeAtual));
+    }
+
+    @Quando("for realizada a chamada no endpoint de delecao de cliente")
+    public void for_realizada_a_chamada_no_endpoint_de_delecao_de_cliente() {
+
+        response = given()
+                .when()
+                .delete(END_API_CLIENTE + "/delete/" + clientDto.cpf());
+
+        response.then().assertThat().statusCode(HttpStatus.OK.value());
+        System.out.println(response.body().prettyPrint());
+
+    }
+
+    @Entao("o cliente deve ser localizado com sucesso na base")
+    public void oClienteDeveSerLocalizadoComSucessoNaBase() {
+        ClientEntity clienteEntity = clienteRepository.findByCpf(clientDto.cpf()).
+                orElseThrow();
+
+        assertEquals(clientDto.nome(), clienteEntity.toClienteDto().nome());
+    }
+
+    @Entao("o cliente deve ser atualizado com sucesso na base")
+    public void oClienteDeveSerAtualizadoComSucessoNaBase() {
+
+        ClientEntity clienteEntity = clienteRepository.findByCpf(clientDto.cpf()).
+                orElseThrow();
+
+        assertEquals(nomeAtual, clienteEntity.toClienteDto().nome());
     }
 
     @E("alterar os dados para CPF {word} e nome {word}")
