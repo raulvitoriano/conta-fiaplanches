@@ -8,8 +8,8 @@ on:
 jobs:
   build:
     services:
-        bddfun-database:
-          image: postgres
+        postgres:
+          image: bddfun-database
           env:
             POSTGRES_USER: admin
             POSTGRES_PASSWORD: admin123
